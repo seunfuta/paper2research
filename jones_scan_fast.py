@@ -198,7 +198,7 @@ if __name__ == "__main__":
     imgdf = pd.DataFrame()
     # input  = sys.argv[1]
     #key_list = app2diskprint_dict.app.unique() #app2diskprint_dict[result.a]
-    result_df = pd.DataFrame(columns=['appname','appsize', 'actual','matches','P(app)'])
+    result_df = pd.DataFrame(columns=['appname','appsize'])#, 'actual','matches','P(app)'])
 
     imgdf = get_image_df(resulti)
     #### new
@@ -260,24 +260,21 @@ if __name__ == "__main__":
         ###added
         imgdf['inv_freq'] = imgdf['inv_freq'].multiply(imgdf["predict-" + key], fill_value=0)
         ###end added
-        result_df.loc[key_list.index(key), 'actual_uniq'] = len(imgdf[imgdf["actual-" + key]==1].drop_duplicates(subset='md5', keep='first'))
+        result_df.loc[key_list.index(key), 'actual_uniq'] = int(len(imgdf[imgdf["actual-" + key]==1].drop_duplicates(subset='md5', keep='first')))
         print("actual_uniq", result_df.loc[key_list.index(key), 'actual_uniq'])
 
-        result_df.loc[key_list.index(key), 'matches_uniq'] = len(imgdf[imgdf["predict-" + key]==1].drop_duplicates(subset='md5', keep='first'))
+        result_df.loc[key_list.index(key), 'matches_uniq'] = int(len(imgdf[imgdf["predict-" + key]==1].drop_duplicates(subset='md5', keep='first')))
         print("matches_uniq", result_df.loc[key_list.index(key), 'matches_uniq'])
 
-        result_df.loc[key_list.index(key), 'freq_matches_uniq'] = imgdf.drop_duplicates(subset='md5', keep='first')['inv_freq'].sum()
+        result_df.loc[key_list.index(key), 'freq_matches_uniq'] = '{:.2f}'.format(imgdf.drop_duplicates(subset='md5', keep='first')['inv_freq'].sum(),2)
         print("freq_matches_uniq",result_df.loc[key_list.index(key), 'freq_matches_uniq'])
 
-        result_df.loc[key_list.index(key),'appsize_uniq'] = len(appdf.drop_duplicates(subset='md5', keep='first'))
+        result_df.loc[key_list.index(key),'appsize_uniq'] = int(len(appdf.drop_duplicates(subset='md5', keep='first')))
         print("appsize",len(appdf))
         print("appsize_uniq",result_df.loc[key_list.index(key),'appsize_uniq'])
 
-        result_df.loc[key_list.index(key), 'P(app)new_uniq'] = round(float(result_df.loc[key_list.index(key), 'freq_matches_uniq'])/float(result_df.loc[key_list.index(key), 'appsize']),5)
+        result_df.loc[key_list.index(key), 'P(app)new_uniq'] = '{:.2f}'.format(float(result_df.loc[key_list.index(key), 'freq_matches_uniq'])/float(result_df.loc[key_list.index(key), 'appsize']),5)
         print("P(app)new_uniq", result_df.loc[key_list.index(key), 'P(app)new_uniq'])
     print(result_df)
     output_path = resulto+str(resulti.split("/")[-1][:-3])+".csv"
     result_df.to_csv(output_path, index=False)
-
-
-

@@ -6,7 +6,23 @@ import argparse
 from os import listdir
 from os.path import isfile, join
 
-def main(imagefilepath):
+class args:
+    i = sys.argv[1] #"/Users/seunfuta/Downloads/NIST/IMG/eraser-W7x32.db" #Wireshark-W7x64.db"
+    c = "/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db"
+    o = "/Users/seunfuta/Downloads/NIST/OLUSCAN/NEW/"
+if __name__ == '__main__':
+    #parser = argparse.ArgumentParser(description='Olu method')
+    #parser.add_argument('-c', action="store", default="/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db", help='catalog path')
+    #parser.add_argument('-i', action="store", default="/Users/seunfuta/Downloads/NIST/IMG/Wireshark-W7x64.db", help="image path folder")
+    #parser.add_argument('-o', action="store", default="/Users/seunfuta/Downloads/NIST/OLUSCAN/", help='output csv')
+    #args = parser.parse_args()
+    
+    #onlyfiles = [f for f in listdir(args.i) if isfile(join(args.i, f))]
+    #for file in onlyfiles:
+    #    print("IMAGE "+str(onlyfiles.index(file)) +" out of "+str(len(onlyfiles)))
+    #    main(join(args.i+file))
+    #main(join(args.i))
+    #def main(imagefilepath):
     CATALOG_DB_PATH = args.c
     catalog_conn = sqlite3.connect(CATALOG_DB_PATH)
     catalog_df = pd.DataFrame(columns=['obj_id', 'inode', 'filename','file_offset', 'len','md5','sha1', 'partition', 'filesize','app','app_id'])
@@ -23,8 +39,8 @@ def main(imagefilepath):
     catalog_conn.close()
     print("catalog app length, ", len(catalog_df))
     #############
-    print(imagefilepath)
-    IMAGE_DB_PATH = imagefilepath
+    print(args.i)#magefilepath)
+    IMAGE_DB_PATH = args.i#imagefilepath
     image_conn = sqlite3.connect(IMAGE_DB_PATH)
     image_df = pd.DataFrame(columns=['obj_id', 'inode', 'filename','file_offset', 'len','md5','sha1', 'partition', 'filesize'])
     image_df = pd.read_sql_query("SELECT block_hashes.obj_id, files.inode, files.filename, block_hashes.file_offset, \
@@ -39,10 +55,10 @@ def main(imagefilepath):
     print("current image length ",len(image_df))
     ##############
 
-    app_list = catalog_df.app.unique()
+    app_list = catalog_df.app.unique() #['Wireshark-W7x64'] #
     result_df = pd.DataFrame()
     for app in app_list:
-        #if app == 'OfficePro2003-W7x32':
+        print(app)
         app_df = catalog_df[catalog_df.app == app]
         app_unique_md5s= app_df.md5.unique()
         matched_image_df = image_df[image_df.md5.isin(app_unique_md5s)]
@@ -52,6 +68,9 @@ def main(imagefilepath):
         app_files = app_df.filename.unique()
         #print(app_files)
         app_pairs_set = {} #dict #set() 
+        lst2 = list(matched_image_df.md5)
+        lst2_pairs = list(map(lambda a, b: a + b, lst2[:-1], lst2[1:]))
+        Prob_Total = float(0)
         for file in app_files:
             file_hashpair_set = set()
             files_df = app_df[app_df.filename == file]
@@ -69,9 +88,10 @@ def main(imagefilepath):
                     file_hashpair_set.add(hash_pair)
             app_pairs_set[file] = file_hashpair_set 
         #print(f"set size is {len(app_pairs_set)}")
-        lst2 = list(matched_image_df.md5)
-        lst2_pairs = list(map(lambda a, b: a + b, lst2[:-1], lst2[1:]))
-        Prob_Total = 0
+        total_app_sector_size = 0
+        for value in app_pairs_set.values():
+            total_app_sector_size += len(value)
+        Prob_Total = float(0)
         for file in app_files:
             #x = 0 #setting a default value
             forward_list = list(map(lambda x: 1 if x in app_pairs_set[file] else 0, lst2_pairs))
@@ -80,27 +100,21 @@ def main(imagefilepath):
             s = 1
             q = 2
             Prob_file = (1 - ((1/(x + s))**q))**(np.log(t))
-            Prob_Total+= Prob_file
-        Prob_App = Prob_Total/len(app_files)    
-
+            #print("forward_list: ", len(forward_list),"x FL(1): ", x, "s: ", s, "q: ", q ,"probfile ", "{:.4f}".format(Prob_file), "weight: ", len(app_pairs_set[file]), "over ", total_app_sector_size)
+            #print("probfile ", "{:.4f}".format(Prob_file))
+            #print("weight: ", len(app_pairs_set[file]), "over ", total_app_sector_size)
+            Prob_Total+= (float(Prob_file) * (float(len(app_pairs_set[file]))/float(total_app_sector_size)))
+            if (Prob_Total == float('inf')): Prob_Total =float(0)
+        Prob_App = "{:.4f}".format(Prob_Total)
+        print("TOTAL PROB: ", Prob_App)
 
         #forward_series = pd.Series(forward_list)
-        if Prob_App == np.inf: Prob_App =float(0)
-        print(app, " matched ", len(matched_image_df), " set ", len(app_pairs_set), " Prob ",Prob_App)
+        #if Prob_App == np.inf: Prob_App =float(0)
+        #print(app, " matched ", len(matched_image_df), " set ", len(app_pairs_set), " Prob ",Prob_App)
         result_df.loc[app,'matched'] = len(matched_image_df)
-        result_df.loc[app,'prob'] = "{:.4f}".format(Prob_App)
+        result_df.loc[app,'prob'] = Prob_App
+    #result_df.replace([np.inf, -np.inf], float(0), inplace=True)
     print(result_df)
     ###############
-    result_df.to_csv(args.o+imagefilepath.split("/")[-1].split(".")[0]+".csv")
+    result_df.to_csv(args.o+args.i.split("/")[-1].split(".")[0]+".csv")
     ################
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Olu method')
-    parser.add_argument('-c', action="store", default="/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db", help='catalog path')
-    parser.add_argument('-i', action="store", default="/Users/seunfuta/Downloads/NIST/IMG/Wireshark-W7x64.db", help="image path folder")
-    parser.add_argument('-o', action="store", default="/Users/seunfuta/Downloads/NIST/OLUSCAN/", help='output csv')
-    args = parser.parse_args()
-    #onlyfiles = [f for f in listdir(args.i) if isfile(join(args.i, f))]
-    #for file in onlyfiles:
-    #    print("IMAGE "+str(onlyfiles.index(file)) +" out of "+str(len(onlyfiles)))
-    #    main(join(args.i+file))
-    main(join(args.i))

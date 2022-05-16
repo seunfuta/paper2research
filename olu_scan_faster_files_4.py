@@ -127,9 +127,8 @@ if __name__ == '__main__':
             app_Prob += (file_Prob * file_app_fraction)
         result_df.loc[app_list.index(app),'validmatches'] = int(validated_app_matched)
         print("APP Prob ", app_Prob)
-        result_df.loc[app_list.index(app),'ProbApp'] = int(app_Prob)
+        result_df.loc[app_list.index(app),'ProbApp'] = round(app_Prob, 6)
     print(result_df)
-   
     image_app = args.i.split("/")[-1][:-3]
     print(image_app)
     output_path = args.o+"/"+image_app+".csv"
@@ -138,5 +137,5 @@ if __name__ == '__main__':
     result_df['image_matches'] = result_df['image_matches'].astype('int64')
     result_df['validmatches'] = result_df['validmatches'].astype('int64')
     result_df['ProbApp'] = result_df['ProbApp'].astype('float64')
-    result_df['ProbApp'] = result_df['ProbApp'].round(decimals=5)
+    result_df['ProbApp'] = result_df['ProbApp'].round(decimals=6)
     result_df.to_csv(output_path, index=False)

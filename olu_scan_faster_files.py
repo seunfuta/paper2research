@@ -96,10 +96,10 @@ def main(imagefilepath):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Olu method')
     parser.add_argument('-c', action="store", default="/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db", help='catalog path')
-    parser.add_argument('-i', action="store", default="/Users/seunfuta/Downloads/NIST/IMG/", help="image path folder")
+    parser.add_argument('-i', action="store", default="/Users/seunfuta/Downloads/NIST/IMG/Wireshark-W7x64.db", help="image path folder")
     parser.add_argument('-o', action="store", default="/Users/seunfuta/Downloads/NIST/OLUSCAN/", help='output csv')
     args = parser.parse_args()
-    onlyfiles = [f for f in listdir(args.i) if isfile(join(args.i, f))]
-    for file in onlyfiles:
-        print("IMAGE "+str(onlyfiles.index(file)) +" out of "+str(len(onlyfiles)))
-        main(join(args.i+file))
+    #onlyfiles = [f for f in listdir(args.i) if isfile(join(args.i, f))]
+    #for file in onlyfiles:
+    #    print("IMAGE "+str(onlyfiles.index(file)) +" out of "+str(len(onlyfiles)))
+    main(join(args.i))#+file))

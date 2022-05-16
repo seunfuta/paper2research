@@ -89,7 +89,7 @@ if __name__ == '__main__':
         appfilenames= app_df.filename.unique()
         for filename in appfilenames:
             #print(filename)
-            series_file_off = pd.Series(index=[0,1,2,3,4])
+            series_file_off = pd.Series(index=[0,1,2,3,4],dtype = 'object')
             appfile_df = app_df[app_df.filename == filename]
             matched_image_appfile_df = matched_image_df[matched_image_df.filename == filename]
             #print(len(matched_image_appfile_df)," sectors", filename)
@@ -101,8 +101,8 @@ if __name__ == '__main__':
                 
                 catapphash_off = np.array(appfile_df.index[appfile_df.md5 == row['md5']])
                 catapphash_off = catapphash_off % 8
-                catapphash_filename = pd.Series(appfile_df.filename[appfile_df.md5 == row['md5']])
-                catapphash_file_off = pd.Series(appfile_df.file_offset[appfile_df.md5 == row['md5']])/512
+                catapphash_filename = np.array(appfile_df.filename[appfile_df.md5 == row['md5']])
+                catapphash_file_off = np.array(appfile_df.file_offset[appfile_df.md5 == row['md5']])/512
                 #print(cluster_off, row['md5'],cluster_off in catapphash_off)
                 #if cluster_off in catapphash_off:
                 #print("image", row['image_offset'], row['md5'], "cluster off", cluster_off, catapphash_filename, catapphash_file_off )
@@ -127,9 +127,8 @@ if __name__ == '__main__':
             app_Prob += (file_Prob * file_app_fraction)
         result_df.loc[app_list.index(app),'validmatches'] = int(validated_app_matched)
         print("APP Prob ", app_Prob)
-        result_df.loc[app_list.index(app),'ProbApp'] = int(app_Prob)
+        result_df.loc[app_list.index(app),'ProbApp'] = round(app_Prob, 6)
     print(result_df)
-   
     image_app = args.i.split("/")[-1][:-3]
     print(image_app)
     output_path = args.o+"/"+image_app+".csv"
@@ -138,5 +137,5 @@ if __name__ == '__main__':
     result_df['image_matches'] = result_df['image_matches'].astype('int64')
     result_df['validmatches'] = result_df['validmatches'].astype('int64')
     result_df['ProbApp'] = result_df['ProbApp'].astype('float64')
-    result_df['ProbApp'] = result_df['ProbApp'].round(decimals=5)
+    result_df['ProbApp'] = result_df['ProbApp'].round(decimals=6)
     result_df.to_csv(output_path, index=False)

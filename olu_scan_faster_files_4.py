@@ -122,7 +122,10 @@ if __name__ == '__main__':
             if len(series_file_off) > 1:
                 if filename == "Program Files/Wireshark/libglib-2.0-0.dll":
                     print(series_file_off)
-                    print(series_file_off[:-1].shape, series_file_off[1:].shape)
+                    for each in range(len(series_file_off)-1):
+                        if series_file_off[each].shape[0]!=1 or series_file_off[each+1].shape[0]!=1:
+                            print(series_file_off[each].shape, series_file_off[each+1].shape)
+
                 lst2_pairs_f = list(map(lambda a, b: 1 if (b-a).any()==1 else 0,series_file_off[:-1],series_file_off[1:]))
                 lst2_pairs_b = list(map(lambda a, b: 1 if (a-b).any()==1 else 0, series_file_off[1:],series_file_off[:-1]))
                 if lst2_pairs_f[-1] == 1: lst2_pairs_f.extend([1]) 

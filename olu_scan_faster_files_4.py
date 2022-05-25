@@ -11,6 +11,14 @@ class args:
     c = "/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db"
     o = "/Users/seunfuta/Downloads/NIST/OLUSCAN/NEWER"
 '''
+def iscontiguous(next_ser_elem,curr_ser_elem):
+    arrayc = np.array([])
+    for e in next_ser_elem:
+        arrayc = e-curr_ser_elem
+        if 1 in arrayc:
+            return 1
+    return 0
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Olu method')
     parser.add_argument('-c', action="store", default="/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db", help='catalog path')
@@ -126,8 +134,8 @@ if __name__ == '__main__':
                         if series_file_off[each].shape[0]!=1 or series_file_off[each+1].shape[0]!=1:
                             print(series_file_off[each].shape, series_file_off[each+1].shape)
 
-                lst2_pairs_f = list(map(lambda a, b: 1 if (b-a).any()==1 else 0,series_file_off[:-1],series_file_off[1:]))
-                lst2_pairs_b = list(map(lambda a, b: 1 if (a-b).any()==1 else 0, series_file_off[1:],series_file_off[:-1]))
+                lst2_pairs_f = list(map(lambda a, b: 1 if iscontiguous(b,a) else 0,series_file_off[:-1],series_file_off[1:]))
+                lst2_pairs_b = list(map(lambda a, b: 1 if iscontiguous(a,b) else 0, series_file_off[1:],series_file_off[:-1]))
                 if lst2_pairs_f[-1] == 1: lst2_pairs_f.extend([1]) 
                 else: lst2_pairs_f.extend([0])
                 if lst2_pairs_b[0] == 1: lst2_pairs_b.insert (0, 1) 

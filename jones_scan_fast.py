@@ -216,7 +216,7 @@ if __name__ == "__main__":
     catalog_df = catalog_df[catalog_df.md5 != 'de03fe65a6765caa8c91343acc62cffc']
     catalog_df = catalog_df[catalog_df.md5 != '85eba416ce0ee0951d1d93e73b191b75']
     catalog_df = catalog_df[catalog_df.md5 != '1b5c2cbf1e37f6b0d33751269ae707af']
-
+    #
     catalog_sqlconn.close()
     key_list = catalog_df.app.unique()
 

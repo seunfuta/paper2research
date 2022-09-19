@@ -29,6 +29,7 @@ def compute_hash(range_tuple):
     return sector_hash_list
 
 def generatorY(subrange):
+    print("len of subrange", len(subrange))
     for obj in subrange:
         block_hashes_cols = ['obj_id','img_offset','fs_offset','file_offset','len','md5','sha1']
         block_hash_df = pd.DataFrame(columns=block_hashes_cols)
@@ -72,17 +73,17 @@ def generatorY(subrange):
             p_file_offset += p_len
             #print("img_offsetE", p_img_offset, "fs_offset", p_fs_offset, "file_offset", p_file_offset)
             block_hash_df = pd.concat([block_hash_df, df])
-    yield file_df, block_hash_df
+        yield file_df, block_hash_df
 
 def process_objects(subrange):
-    list_pair = []
+    print("subrange", type(subrange), subrange)
     combo_files_df = pd.DataFrame()
     combo_sectors_df = pd.DataFrame()
     for files_df,sectors_df in generatorY(subrange):
         combo_files_df = pd.concat([combo_files_df, files_df])
         combo_sectors_df = pd.concat([combo_sectors_df, sectors_df])
-    list_pair.append([combo_files_df, combo_sectors_df])
-    return list_pair
+    
+    return combo_files_df, combo_sectors_df
 
 def process_object_sectors(objlist):
     sector_size = 512
@@ -172,20 +173,29 @@ if __name__ == '__main__':
         obj_list.append(each_obj)
     #img_objcount = len(obj_list)
     #fullrange = (0, img_objcount)
-    num_subranges = 1000
+    num_subranges = 65
     subranges = determine_subranges(obj_list, num_subranges)#fullrange
-
+    for r in subranges:
+        print("mini subrange size", len(list(r)))
+    print("subranges len", type(subranges), len(list(subranges)) )
     executor = MPIPoolExecutor()
-    sectors_df_list = executor.map(process_objects, subranges)
+    sectors_df_list = process_objects(subranges[0])
+    #sectors_df_list = executor.map(process_objects, subranges)
     #files_df_list = executor.map(process_object_files, subranges)
     executor.shutdown()
     grand_sectors_df = pd.DataFrame()
     grand_files_df = pd.DataFrame()
     # flatten the list of lists
     print("sectors_df_list", sectors_df_list)
+    
     for df in sectors_df_list:
-        print("df[0]", df[0])
-        print("df[1]", df[1])
+        print("df ", type(df), len(df))
+        dataframe1 = pd.DataFrame(df[0])
+        dataframe2 = pd.DataFrame(df[1])
+        print("dataframe1", dataframe1)
+        print("dataframe2", dataframe2)
+
+        #print("df[1]", df[1])
         grand_files_df = pd.concat([grand_files_df, df[0]])
         grand_sectors_df = pd.concat([grand_sectors_df, df[1]])
     #for df in files_df_list:
@@ -194,3 +204,4 @@ if __name__ == '__main__':
     con = sqlite3.connect("/scratch/oadegbeh/pat.db")
     grand_sectors_df.to_sql('block_hashes', con, index=True)
     grand_files_df.to_sql('files', con, index=True)
+    

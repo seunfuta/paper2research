@@ -11,14 +11,6 @@ class args:
     c = "/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db"
     o = "/Users/seunfuta/Downloads/NIST/OLUSCAN/NEWER"
 '''
-def iscontiguous(next_ser_elem,curr_ser_elem):
-    arrayc = np.array([])
-    for e in next_ser_elem:
-        arrayc = e-curr_ser_elem
-        if 1 in arrayc:
-            return 1
-    return 0
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Olu method')
     parser.add_argument('-c', action="store", default="/Users/seunfuta/Downloads/NIST/OluDB_combo_v3.db", help='catalog path')
@@ -96,7 +88,7 @@ if __name__ == '__main__':
         #series_file_off = pd.Series()
         appfilenames= app_df.filename.unique()
         for filename in appfilenames:
-            print(filename)
+            #print(filename)
             series_file_off = pd.Series(index=[0,1,2,3,4],dtype = 'object')
             appfile_df = app_df[app_df.filename == filename]
             matched_image_appfile_df = matched_image_df[matched_image_df.filename == filename]
@@ -109,43 +101,24 @@ if __name__ == '__main__':
                 
                 catapphash_off = np.array(appfile_df.index[appfile_df.md5 == row['md5']])
                 catapphash_off = catapphash_off % 8
-                #print("catapphash_off ",catapphash_off)
-
                 catapphash_filename = np.array(appfile_df.filename[appfile_df.md5 == row['md5']])
-                #print("catapphash_filename ",catapphash_filename)
                 catapphash_file_off = np.array(appfile_df.file_offset[appfile_df.md5 == row['md5']])/512
-                #print("catapphash_file_off ", catapphash_file_off)
                 #print(cluster_off, row['md5'],cluster_off in catapphash_off)
                 #if cluster_off in catapphash_off:
                 #print("image", row['image_offset'], row['md5'], "cluster off", cluster_off, catapphash_filename, catapphash_file_off )
                 #series_filename[len(series_filename)] = catapphash_filename
                 series_file_off[counter]= catapphash_file_off
                 counter +=1
-            #for index, value in series_file_off.iteritems():
-                #if type(value)!= float and len(value) > 1: print(value)
-            #print("series_file_off ",series_file_off)
-            #lst2_pairs_f = list(map(lambda a, b: print(type(a),a,type(b),b),series_file_off[:-1],series_file_off[1:]))
-            series_file_off = series_file_off.dropna()
-            print("size of series ", len(series_file_off))
-            if len(series_file_off) > 1:
-                '''
-                if filename == "Program Files/Wireshark/libglib-2.0-0.dll":
-                    print(series_file_off)
-                    for each in range(len(series_file_off)-1):
-                        if series_file_off[each].shape[0]!=1 or series_file_off[each+1].shape[0]!=1:
-                            print(series_file_off[each].shape, series_file_off[each+1].shape)
-                '''
-                lst2_pairs_f = list(map(lambda a, b: 1 if iscontiguous(b,a) else 0,series_file_off[:-1],series_file_off[1:]))
-                lst2_pairs_b = list(map(lambda a, b: 1 if iscontiguous(a,b) else 0, series_file_off[1:],series_file_off[:-1]))
-                if lst2_pairs_f[-1] == 1: lst2_pairs_f.extend([1]) 
-                else: lst2_pairs_f.extend([0])
-                if lst2_pairs_b[0] == 1: lst2_pairs_b.insert (0, 1) 
-                else: lst2_pairs_b.insert (0, 0)  
-                #print(lst2_pairs_f)
-                #print(lst2_pairs_b)
-                lst2_pairs = (pd.Series(lst2_pairs_f) | pd.Series(lst2_pairs_b))
-            else: 
-                lst2_pairs = (pd.Series([1]))
+            #print(series_file_off)
+            lst2_pairs_f = list(map(lambda a, b: 1 if b-a==1 else 0,series_file_off[:-1],series_file_off[1:]))
+            lst2_pairs_b = list(map(lambda a, b: 1 if a-b==1 else 0, series_file_off[1:],series_file_off[:-1]))
+            if lst2_pairs_f[-1] == 1: lst2_pairs_f.extend([1]) 
+            else: lst2_pairs_f.extend([0])
+            if lst2_pairs_b[0] == 1: lst2_pairs_b.insert (0, 1) 
+            else: lst2_pairs_b.insert (0, 0)  
+            #print(lst2_pairs_f)
+            #print(lst2_pairs_b)
+            lst2_pairs = (pd.Series(lst2_pairs_f) | pd.Series(lst2_pairs_b))
             #print(lst2_pairs)
             validated_app_matched += lst2_pairs.sum()
             file_Prob =float(lst2_pairs.sum()/float(len(appfile_df)))

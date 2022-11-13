@@ -49,7 +49,8 @@ if __name__ == '__main__':
                     FROM files \
                     INNER JOIN block_hashes ON files.obj_id = block_hashes.obj_id;", image_conn)
     print("original image length ",len(image_df))
-    image_df = image_df[image_df.md5 != 'bf619eac0cdf3f68d496ea9344137e8b']
+    image_df = image_df[
+        image_df.md5 != 'bf619eac0cdf3f68d496ea9344137e8b']
     image_df = image_df[image_df.md5 != 'de03fe65a6765caa8c91343acc62cffc']
     image_df = image_df[image_df.md5 != '85eba416ce0ee0951d1d93e73b191b75']
     image_df = image_df[image_df.md5 != '1b5c2cbf1e37f6b0d33751269ae707af']
